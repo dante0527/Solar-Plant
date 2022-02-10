@@ -1,0 +1,93 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+# Solar Plant Diagnostics in R
+
+*This analysis is a case study for the last course in the Google Data Analytics Certificate*
+
+### The purpose of this notebook is twofold:
+
+1.  to conduct functional analysis on each inverter in the plant to visualize trends in performance and identify any under-performing equipment
+2.  to predict future power generation in the short-term
+
+## Overview of solar plants
+
+First, it will be important to establish some context and explain what metrics will be used in this analysis.
+
+**How do solar plants generate energy?**
+
+-   Solar panels receive photons from sunlight, and in turn produce DC (Direct Current) power.
+-   An inverter then converts this DC to AC (Alternating Current) power to then be used for various purposes.
+
+In this analysis we will be using DC and AC power metrics that provide the amount of power (kW) generated per 15 minute interval.
+
+We will also be looking at the daily yield of each inverter, as well as the cumulative total yield of each inverter over a 34 day period.
+
+**First, we will install the necessary packages to perform the analysis:**
+```{r message=FALSE}
+install.packages('tidyverse')
+install.packages('lubridate')
+install.packages('skimr')
+install.packages('janitor')
+install.packages('chron')
+```
+**Now Load the libraries we just installed:**
+```{r message=FALSE}
+library(tidyverse)  #helps wrangle data
+library(lubridate)  #helps wrangle date attributes
+library(ggplot2)  #helps visualize data
+library(skimr)  #summary statistics
+library(janitor)  #helps with cleaning data
+library(chron)  #helps deal with dates
+```
+**We're going to do a few things to clean up the dataset before we work with it**
+```{r message=FALSE}
+# Load data set
+plant0 <- read_csv('Plant_1_Generation_Data.csv')
+
+# Make copy of data frame with unique and lowercase column names
+plant1 <- plant0 %>%
+  rename_with(tolower)%>%
+  clean_names()
+
+# Change 'date_time' from 'chr' to 'dttm' data type
+plant1 <- plant1 %>%
+  mutate(date_time = dmy_hm(date_time))
+
+# Create new variables 'date' and 'time' from existing variable 'date_time'
+plant1 <- plant1 %>%
+  mutate(date = as_date(date_time))%>%
+  mutate(time = format(date_time, format = "%H:%M:%S"))
+
+# Change 'time' variable to type 'chron' to make it continuous
+plant1 <- plant1 %>%
+  mutate(time = chron(times(plant1$time)))
+
+# Calculate mean DC production for each inverter by time of day
+# and save as new variable
+plant1 <- plant1 %>%
+  group_by(time, source_key)%>%
+  mutate(mean_dc_power = mean(dc_power))
+
+#Establish min and max dates
+mindate <- min(plant1$date)
+maxdate <- max(plant1$date)
+```
+
+## Visual Analysis of Power Plant
+
+```{r}
+# Visualize daily yield for entire date range
+ggplot(plant1, aes(date_time, daily_yield))+
+  geom_line(color="blue")+
+  labs(title="Daily Yield",
+       caption=paste0("Data from: ", mindate, " to ", maxdate),
+       x="Date/Time",
+       y="kW")
+```
+
+**Explanation**
+
+Here we can see the daily yield of the entire plant throughout the entire date range that the data was collected for. We can see that power yield is fairly consistent, with a normal amount of variation.
