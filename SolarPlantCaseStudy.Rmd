@@ -27,11 +27,11 @@ We will also be looking at the daily yield of each inverter, as well as the cumu
 
 **First, we will install the necessary packages to perform the analysis:**
 ```{r message=FALSE}
-install.packages('tidyverse')
-install.packages('lubridate')
-install.packages('skimr')
-install.packages('janitor')
-install.packages('chron')
+install.packages("tidyverse")
+install.packages("lubridate")
+install.packages("skimr")
+install.packages("janitor")
+install.packages("chron")
 ```
 **Now Load the libraries we just installed:**
 ```{r message=FALSE}
@@ -42,33 +42,33 @@ library(skimr)  #summary statistics
 library(janitor)  #helps with cleaning data
 library(chron)  #helps deal with dates
 ```
-**We're going to do a few things to clean up the dataset before we work with it**
+**We"re going to do a few things to clean up the dataset before we work with it**
 ```{r message=FALSE}
 # Load data set
-plant0 <- read_csv('Plant_1_Generation_Data.csv')
+plant0 <- read_csv("Plant_1_Generation_Data.csv")
 
 # Make copy of data frame with unique and lowercase column names
 plant1 <- plant0 %>%
-  rename_with(tolower)%>%
+  rename_with(tolower) %>%
   clean_names()
 
-# Change 'date_time' from 'chr' to 'dttm' data type
+# Change "date_time" from "chr" to "dttm" data type
 plant1 <- plant1 %>%
   mutate(date_time = dmy_hm(date_time))
 
-# Create new variables 'date' and 'time' from existing variable 'date_time'
+# Create new variables "date" and "time" from existing variable "date_time"
 plant1 <- plant1 %>%
-  mutate(date = as_date(date_time))%>%
+  mutate(date = as_date(date_time)) %>%
   mutate(time = format(date_time, format = "%H:%M:%S"))
 
-# Change 'time' variable to type 'chron' to make it continuous
+# Change "time" variable to type "chron" to make it continuous
 plant1 <- plant1 %>%
   mutate(time = chron(times(plant1$time)))
 
 # Calculate mean DC production for each inverter by time of day
 # and save as new variable
 plant1 <- plant1 %>%
-  group_by(time, source_key)%>%
+  group_by(time, source_key) %>%
   mutate(mean_dc_power = mean(dc_power))
 
 #Establish min and max dates
@@ -80,12 +80,12 @@ maxdate <- max(plant1$date)
 
 ```{r}
 # Visualize daily yield for entire date range
-ggplot(plant1, aes(date_time, daily_yield))+
-  geom_line(color="blue")+
-  labs(title="Daily Yield",
-       caption=paste0("Data from: ", mindate, " to ", maxdate),
-       x="Date/Time",
-       y="kW")
+ggplot(plant1, aes(date_time, daily_yield)) +
+  geom_line(color = "blue") +
+  labs(title = "Daily Yield",
+       caption = paste0("Data from: ", mindate, " to ", maxdate),
+       x = "Date/Time",
+       y = "kW")
 ```
 
 **Explanation**
