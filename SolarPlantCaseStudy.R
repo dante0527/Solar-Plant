@@ -1,4 +1,6 @@
 # Install required packages
+install.packages("httpgd")
+install.packages("languageserver")
 install.packages("tidyverse")
 install.packages("lubridate")
 install.packages("skimr")
